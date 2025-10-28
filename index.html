@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics SDK Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      background: white;
+      color: #333;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .status {
+      background: #f0f9ff;
+      border-left: 4px solid #0ea5e9;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .status.success {
+      background: #f0fdf4;
+      border-color: #22c55e;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Analytics SDK Test</h1>
+    
+    <div class="status" id="status">
+      <strong>Status:</strong> SDK Loading...
+    </div>
+    
+    <p>This page demonstrates the hosted SDK. Open console (F12) to see logs.</p>
+    
+    <h3>Try These:</h3>
+    <button onclick="trackClick()">Track Button Click</button>
+    <button onclick="trackPurchase()">Track Purchase</button>
+    <button onclick="setUser()">Set User ID</button>
+    <button onclick="flushNow()">Flush Now</button>
+    
+    <hr style="margin: 30px 0;">
+    
+    <h3>Copy-Paste for Your Site:</h3>
+    <pre style="background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; color: #333;"><code>&lt;script src="analytics.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  Analytics.init({
+    endpoint: 'http://localhost:8080',
+    siteId: 'my-website',
+    debug: true
+  });
+  
+  // Track events anywhere:
+  Analytics.track('button_click', { id: 'cta' });
+&lt;/script&gt;</code></pre>
+  </div>
+
+  <!-- Load the SDK -->
+  <script src="analytics.min.js"></script>
+  
+  <!-- Initialize and use -->
+  <script>
+    // Check if SDK loaded
+    if (typeof Analytics !== 'undefined') {
+      document.getElementById('status').className = 'status success';
+      document.getElementById('status').innerHTML = '<strong>✅ SDK Loaded!</strong> Ready to track events.';
+      
+      // Initialize
+      Analytics.init({
+        endpoint: 'http://localhost:8080',
+        siteId: 'sdk-test',
+        debug: true
+      });
+      
+      console.log('✅ Analytics SDK initialized');
+    } else {
+      document.getElementById('status').innerHTML = '<strong>❌ SDK Failed to Load</strong>';
+    }
+    
+    // Test functions
+    function trackClick() {
+      Analytics.track('test_button_click', {
+        timestamp: Date.now(),
+        page: window.location.pathname
+      });
+      alert('Event tracked! Check console and collector logs.');
+    }
+    
+    function trackPurchase() {
+      Analytics.track('test_purchase', {
+        amount: 99.99,
+        currency: 'USD',
+        productId: 'prod_test'
+      });
+      alert('Purchase tracked! Check console and collector logs.');
+    }
+    
+    function setUser() {
+      const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+      Analytics.setUserId(userId);
+      Analytics.setUserProps({
+        plan: 'premium',
+        testUser: true
+      });
+      alert('User ID set to: ' + userId);
+    }
+    
+    function flushNow() {
+      Analytics.flush().then(() => {
+        alert('Events flushed! Check collector logs.');
+      });
+    }
+  </script>
+</body>
+</html>
+
