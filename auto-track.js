@@ -81,24 +81,28 @@
      */
     trackClicks() {
       document.addEventListener('click', (e) => {
-        const element = e.target;
-        const props = this.getElementProps(element);
-        
-        // Determine element type
-        let eventName = 'element_clicked';
-        const tagName = element.tagName.toLowerCase();
-        
-        if (tagName === 'button') {
-          eventName = 'button_clicked';
-        } else if (tagName === 'a') {
-          eventName = 'link_clicked';
-          props.href = element.href;
-          props.target = element.target;
-        } else if (element.hasAttribute('role') && element.getAttribute('role') === 'button') {
-          eventName = 'button_clicked';
-        }
+        try {
+          const element = e.target;
+          const props = this.getElementProps(element);
+          
+          // Determine element type
+          let eventName = 'element_clicked';
+          const tagName = element.tagName.toLowerCase();
+          
+          if (tagName === 'button') {
+            eventName = 'button_clicked';
+          } else if (tagName === 'a') {
+            eventName = 'link_clicked';
+            props.href = element.href;
+            props.target = element.target;
+          } else if (element.hasAttribute('role') && element.getAttribute('role') === 'button') {
+            eventName = 'button_clicked';
+          }
 
-        window.Analytics.track(eventName, props);
+          window.Analytics.track(eventName, props);
+        } catch (err) {
+          console.error('[AutoTrack] Error tracking click:', err, e.target);
+        }
       }, true);
     },
 
@@ -295,7 +299,7 @@
 
       // Special attributes
       if (element.name) props.elementName = element.name;
-      if (element.type) props.elementType = element.type;
+      if (element.type) props.inputType = element.type; // Don't overwrite elementType!
       if (element.value && element.type !== 'password') {
         props.elementValue = String(element.value).substring(0, 50);
       }
