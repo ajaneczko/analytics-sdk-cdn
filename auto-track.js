@@ -285,9 +285,16 @@
       }
 
       // Special handling for data-ga-id (Google Analytics style tracking ID)
-      // This gets top-level prominence for easy querying
-      if (element.dataset && element.dataset.gaId) {
-        props.gaId = element.dataset.gaId;
+      // Bubble up to find data-ga-id on parent elements (for nested structures)
+      let gaIdElement = element;
+      let maxDepth = 5; // Check up to 5 parent levels
+      while (gaIdElement && maxDepth > 0) {
+        if (gaIdElement.dataset && gaIdElement.dataset.gaId) {
+          props.gaId = gaIdElement.dataset.gaId;
+          break;
+        }
+        gaIdElement = gaIdElement.parentElement;
+        maxDepth--;
       }
 
       // Data attributes (all data-* attributes)
