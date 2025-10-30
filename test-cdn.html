@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDN Test - data-ga-id Tracking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .status {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #log {
+      background: #2d2d2d;
+      color: #00ff00;
+      padding: 20px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+      border-left: 3px solid #00ff00;
+      padding-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 CDN Test - data-ga-id Tracking</h1>
+  
+  <div id="status"></div>
+  
+  <h2>Test Buttons (with data-ga-id)</h2>
+  <button data-ga-id="test-button-1">Test Button 1</button>
+  <button data-ga-id="test-button-2">Test Button 2</button>
+  <button data-ga-id="test-cta-signup">CTA: Sign Up</button>
+  
+  <h2>Event Log</h2>
+  <div id="log">Initializing...</div>
+  
+  <!-- Load from CDN with cache buster -->
+  <script src="https://ajaneczko.github.io/analytics-sdk-cdn/analytics.min.js?v=20241030"></script>
+  <script src="https://ajaneczko.github.io/analytics-sdk-cdn/auto-track.js?v=20241030"></script>
+  
+  <script>
+    const statusDiv = document.getElementById('status');
+    const logDiv = document.getElementById('log');
+    
+    function log(message, isError = false) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.style.borderLeftColor = isError ? '#ff0000' : '#00ff00';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    function showStatus(message, isError = false) {
+      statusDiv.className = isError ? 'status error' : 'status success';
+      statusDiv.textContent = message;
+    }
+    
+    log('Starting CDN test...');
+    
+    // Check if scripts loaded
+    if (typeof window.Analytics === 'undefined') {
+      log('❌ ERROR: Analytics SDK not loaded!', true);
+      showStatus('❌ ERROR: Analytics SDK not loaded from CDN', true);
+    } else {
+      log('✅ Analytics SDK loaded');
+    }
+    
+    if (typeof window.AutoTrack === 'undefined') {
+      log('❌ ERROR: AutoTrack not loaded!', true);
+      showStatus('❌ ERROR: AutoTrack not loaded from CDN', true);
+    } else {
+      log('✅ AutoTrack loaded');
+    }
+    
+    if (typeof window.Analytics !== 'undefined' && typeof window.AutoTrack !== 'undefined') {
+      showStatus('✅ All scripts loaded successfully!');
+      
+      try {
+        // Initialize Analytics
+        log('Initializing Analytics...');
+        Analytics.init({
+          endpoint: 'http://localhost:8080',
+          siteId: 'cdn-test',
+          debug: true
+        });
+        log('✅ Analytics initialized');
+        
+        // Start AutoTrack
+        log('Starting AutoTrack with captureAttributes: true...');
+        AutoTrack.start({
+          trackClicks: true,
+          captureAttributes: true,
+          captureText: true
+        });
+        log('✅ AutoTrack started');
+        
+        // Test gaId capture
+        log('Testing data-ga-id capture...');
+        const testButton = document.querySelector('[data-ga-id="test-button-1"]');
+        if (testButton && AutoTrack.getElementProps) {
+          const props = AutoTrack.getElementProps(testButton);
+          log(`Props captured: ${JSON.stringify(props, null, 2)}`);
+          
+          if (props.gaId) {
+            log(`✅ SUCCESS! gaId captured: ${props.gaId}`);
+            log(`✅ data_ga_id also captured: ${props.data_ga_id}`);
+            showStatus('✅ SUCCESS! data-ga-id tracking is working!');
+          } else {
+            log('❌ ERROR: gaId not captured!', true);
+            showStatus('❌ ERROR: gaId field not captured', true);
+          }
+        }
+        
+        // Add click listener to show what's being tracked
+        document.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON') {
+            const gaId = e.target.getAttribute('data-ga-id');
+            log(`🖱️ Button clicked: ${gaId || 'no gaId'}`);
+            log(`   Will be tracked with gaId: ${gaId}`);
+          }
+        });
+        
+      } catch (error) {
+        log(`❌ ERROR: ${error.message}`, true);
+        showStatus(`❌ ERROR: ${error.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>
+
