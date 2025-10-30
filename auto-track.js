@@ -154,8 +154,7 @@
             if (scrollPercent >= milestone && !tracked.has(milestone)) {
               tracked.add(milestone);
               window.Analytics.track('scroll_depth', {
-                depth: milestone,
-                page: window.location.pathname
+                depth: milestone
               });
             }
           });
@@ -178,15 +177,13 @@
           filename: e.filename,
           line: e.lineno,
           column: e.colno,
-          stack: e.error?.stack?.substring(0, 500), // Limit stack trace
-          page: window.location.pathname
+          stack: e.error?.stack?.substring(0, 500) // Limit stack trace
         });
       });
 
       window.addEventListener('unhandledrejection', (e) => {
         window.Analytics.track('promise_rejection', {
-          reason: String(e.reason),
-          page: window.location.pathname
+          reason: String(e.reason)
         });
       });
     },
@@ -201,14 +198,11 @@
         if (document.hidden) {
           const timeOnPage = Math.round((Date.now() - startTime) / 1000);
           window.Analytics.track('page_hidden', {
-            timeOnPage: timeOnPage,
-            page: window.location.pathname
+            timeOnPage: timeOnPage
           });
         } else {
           startTime = Date.now();
-          window.Analytics.track('page_visible', {
-            page: window.location.pathname
-          });
+          window.Analytics.track('page_visible', {});
         }
       });
     },
@@ -230,8 +224,7 @@
               fieldId: fieldId,
               fieldName: element.name,
               fieldType: element.type,
-              formId: element.form?.id || 'unknown',
-              page: window.location.pathname
+              formId: element.form?.id || 'unknown'
             });
           }
         }
@@ -257,8 +250,7 @@
           window.Analytics.track('page_performance', {
             loadTime: Math.round(loadTime),
             domReady: Math.round(domReady),
-            firstPaint: firstPaint ? Math.round(firstPaint) : undefined,
-            page: window.location.pathname
+            firstPaint: firstPaint ? Math.round(firstPaint) : undefined
           });
         }, 0);
       });
@@ -288,7 +280,13 @@
         props.elementText = element.textContent.trim().substring(0, 100);
       }
 
-      // Data attributes
+      // Special handling for data-ga-id (Google Analytics style tracking ID)
+      // This gets top-level prominence for easy querying
+      if (element.dataset && element.dataset.gaId) {
+        props.gaId = element.dataset.gaId;
+      }
+
+      // Data attributes (all data-* attributes)
       if (this.config.captureAttributes && element.dataset) {
         Object.keys(element.dataset).forEach(key => {
           props[`data_${key}`] = element.dataset[key];
