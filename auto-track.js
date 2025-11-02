@@ -33,11 +33,37 @@
     start(customConfig = {}) {
       this.config = { ...this.config, ...customConfig };
       
+      // Wait for Analytics SDK to be ready
       if (!window.Analytics || !window.Analytics.instance) {
-        console.warn('[AutoTrack] Analytics SDK not initialized. Call Analytics.init() first.');
+        console.log('[AutoTrack] Waiting for Analytics SDK to initialize...');
+        
+        // Retry every 50ms for up to 5 seconds
+        let attempts = 0;
+        const maxAttempts = 100; // 100 * 50ms = 5 seconds
+        
+        const checkInterval = setInterval(() => {
+          attempts++;
+          
+          if (window.Analytics && window.Analytics.instance) {
+            clearInterval(checkInterval);
+            console.log('[AutoTrack] ✅ Analytics SDK ready, starting auto-tracking');
+            this._initializeTracking();
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            console.error('[AutoTrack] ❌ Analytics SDK not initialized after 5 seconds. Call Analytics.init() first.');
+          }
+        }, 50);
+        
         return;
       }
 
+      this._initializeTracking();
+    },
+
+    /**
+     * Initialize all tracking listeners
+     */
+    _initializeTracking() {
       console.log('[AutoTrack] Starting automatic event tracking...');
       
       // Track page performance
